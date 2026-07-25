@@ -494,8 +494,7 @@ def _surface_css(stats_card_blur: int) -> str:
             "}",
             "",
             "html.astrbot-palette-active #app .v-navigation-drawer .v-list-item--active {",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .v-card--variant-outlined,",
@@ -755,36 +754,70 @@ def _page_specific_surface_css() -> str:
     )
 
 
+def _backdrop_filter_lines(blur: int) -> list[str]:
+    # blur(0px) 仍会触发浏览器的滤镜合成，关闭时必须输出 none
+    if blur <= 0:
+        return [
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
+        ]
+    return [
+        f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+        f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+    ]
+
+
 def _stats_highlight_css(stats_card_blur: int) -> str:
     blur = max(0, min(40, stats_card_blur))
+    glass_enabled = blur > 0
     surface = (
         "rgba(var(--v-theme-surface), "
         "calc(0.42 + var(--astrbot-palette-surface-opacity, 0) * 0.32))"
+        if glass_enabled
+        else "transparent"
     )
     surface_strong = (
         "rgba(var(--v-theme-surface), "
         "calc(0.54 + var(--astrbot-palette-surface-opacity, 0) * 0.28))"
+        if glass_enabled
+        else "transparent"
     )
     config_outer_surface = (
         "rgba(var(--v-theme-surface), "
         "calc(0.18 + var(--astrbot-palette-surface-opacity, 0) * 0.16))"
+        if glass_enabled
+        else "transparent"
     )
     config_shell_surface = (
         "rgba(var(--v-theme-surface), "
         "calc(0.20 + var(--astrbot-palette-surface-opacity, 0) * 0.18))"
+        if glass_enabled
+        else "transparent"
     )
     config_row_surface = (
         "rgba(var(--v-theme-surface), "
         "calc(0.30 + var(--astrbot-palette-surface-opacity, 0) * 0.22))"
+        if glass_enabled
+        else "transparent"
     )
     primary_soft = (
         "rgba(var(--v-theme-primary), "
         "calc(0.14 + var(--astrbot-palette-surface-opacity, 0) * 0.12))"
     )
-    primary_ring = "rgba(var(--v-theme-primary), 0.34)"
+    primary_ring = (
+        "rgba(var(--v-theme-primary), 0.34)" if glass_enabled else "transparent"
+    )
     border = (
         "rgba(var(--v-theme-on-surface), "
         "calc(0.20 + var(--astrbot-palette-surface-opacity, 0) * 0.12))"
+        if glass_enabled
+        else "transparent"
+    )
+    config_panel_border = (
+        "rgba(var(--v-theme-on-surface), 0.16)" if glass_enabled else "transparent"
+    )
+    config_row_border = (
+        "rgba(var(--v-theme-on-surface), 0.15)" if glass_enabled else "transparent"
     )
     text = "rgb(var(--v-theme-on-surface))"
     muted = "rgba(var(--v-theme-on-surface), 0.78)"
@@ -792,12 +825,40 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
     shadow = (
         "0 16px 36px rgba(0, 0, 0, 0.26), "
         "inset 0 1px 0 rgba(255, 255, 255, 0.12)"
+        if glass_enabled
+        else "none"
     )
     hover_shadow = (
         "0 20px 44px rgba(0, 0, 0, 0.32), "
         "0 0 0 1px rgba(var(--v-theme-primary), 0.22), "
         "inset 0 1px 0 rgba(255, 255, 255, 0.16)"
+        if glass_enabled
+        else "none"
     )
+    config_panel_shadow = (
+        "0 20px 54px rgba(0, 0, 0, 0.18), "
+        "inset 0 1px 0 rgba(255, 255, 255, 0.10)"
+        if glass_enabled
+        else "none"
+    )
+    config_shell_shadow = (
+        "0 18px 46px rgba(0, 0, 0, 0.18), "
+        "inset 0 1px 0 rgba(255, 255, 255, 0.10)"
+        if glass_enabled
+        else "none"
+    )
+    config_row_shadow = (
+        "0 12px 30px rgba(0, 0, 0, 0.16), "
+        "inset 0 1px 0 rgba(255, 255, 255, 0.09)"
+        if glass_enabled
+        else "none"
+    )
+    overview_glint = (
+        "linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 44%)"
+        if glass_enabled
+        else "none"
+    )
+    hover_transform = "translateY(-1px)" if glass_enabled else "none"
     return "\n".join(
         [
             "html.astrbot-palette-active #app .v-main .platform-page,",
@@ -842,15 +903,13 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "html.astrbot-palette-active #app .v-main .plugin-card .plugin-card-content,",
             "html.astrbot-palette-active #app .v-main .plugin-card .extension-actions,",
             "html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions,",
-            "html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card,",
             "html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions,",
             "html.astrbot-palette-active #app .v-main .extension-page .neo-table-card,",
             "html.astrbot-palette-active #app .v-main .extension-page .neo-filter-card,",
             "html.astrbot-palette-active #app .v-main .extension-page .market-filter-control,",
-            "html.astrbot-palette-active #app .v-main .extension-page .plugin-summary-card,",
-            "html.astrbot-palette-active #app .v-main .extension-page .handler-card,",
-            "html.astrbot-palette-active #app .v-main .config-page .config-panel,",
-            "html.astrbot-palette-active #app .v-main .config-panel,",
+            "html.astrbot-palette-active #app .v-main .plugin-detail-page .plugin-summary-card,",
+            "html.astrbot-palette-active #app .v-main .plugin-detail-page .handler-card,",
+            "html.astrbot-palette-active #app .v-main .plugin-detail-page .docs-card,",
             "html.astrbot-palette-active #app .v-main .config-page .config-toolbar,",
             "html.astrbot-palette-active #app .v-main .config-panel .config-toolbar,",
             "html.astrbot-palette-active #app .v-main .config-page .config-section,",
@@ -873,8 +932,65 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             f"  background-color: {surface} !important;",
             f"  border-color: {border} !important;",
             f"  box-shadow: {shadow} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            "}",
+            "",
+            # 外层玻璃载体：只有这一组执行真实的背景模糊
+            "html.astrbot-palette-active #app .v-main .platform-page .item-card,",
+            "html.astrbot-palette-active #app .v-main .platform-page .v-card:not(.bg-primary):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-error):not(.bg-info),",
+            "html.astrbot-palette-active #app .v-main .platform-page .console-displayer-wrapper,",
+            "html.astrbot-palette-active #app .v-main .platform-page #console-wrapper,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-workbench,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-sources-panel,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-config-shell,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-section,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-chat-panel,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-empty-state,",
+            "html.astrbot-palette-active #app .v-main .extension-page .extension-card,",
+            "html.astrbot-palette-active #app .v-main .extension-card,",
+            "html.astrbot-palette-active #app .v-main .v-card.extension-card,",
+            "html.astrbot-palette-active #app .v-main .extension-page .plugin-card,",
+            "html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card,",
+            "html.astrbot-palette-active #app .v-main .plugin-card,",
+            "html.astrbot-palette-active #app .v-main .v-card.plugin-card,",
+            "html.astrbot-palette-active #app .v-main .extension-page .neo-table-card,",
+            "html.astrbot-palette-active #app .v-main .extension-page .neo-filter-card,",
+            "html.astrbot-palette-active #app .v-main .extension-page .market-filter-control,",
+            "html.astrbot-palette-active #app .v-main .plugin-detail-page .plugin-summary-card,",
+            "html.astrbot-palette-active #app .v-main .plugin-detail-page .handler-card,",
+            "html.astrbot-palette-active #app .v-main .plugin-detail-page .docs-card,",
+            "html.astrbot-palette-active #app .v-main .stats-page .meta-pill,",
+            "html.astrbot-palette-active #app .v-main .stats-page .range-switch,",
+            "html.astrbot-palette-active #app .v-main .stats-page .stat-card {",
+            *_backdrop_filter_lines(blur),
+            "}",
+            "",
+            # 内层内容区和操作区：只保留半透明表面，禁止再叠加模糊层
+            "html.astrbot-palette-active #app .v-main .platform-page .console-term,",
+            "html.astrbot-palette-active #app .v-main .provider-page .provider-source-item,",
+            "html.astrbot-palette-active #app .v-main .extension-card .extension-card-text,",
+            "html.astrbot-palette-active #app .v-main .extension-card .extension-actions,",
+            "html.astrbot-palette-active #app .v-main .extension-card .v-card-actions,",
+            "html.astrbot-palette-active #app .v-main .plugin-card .plugin-card-content,",
+            "html.astrbot-palette-active #app .v-main .plugin-card .extension-actions,",
+            "html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions,",
+            "html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions,",
+            "html.astrbot-palette-active #app .v-main .config-page .config-toolbar,",
+            "html.astrbot-palette-active #app .v-main .config-panel .config-toolbar,",
+            "html.astrbot-palette-active #app .v-main .config-page .config-section,",
+            "html.astrbot-palette-active #app .v-main .config-panel .config-section,",
+            "html.astrbot-palette-active #app .v-main .config-page .config-row,",
+            "html.astrbot-palette-active #app .v-main .config-panel .config-row,",
+            "html.astrbot-palette-active #app .v-main .config-page .config-item,",
+            "html.astrbot-palette-active #app .v-main .config-panel .config-item,",
+            "html.astrbot-palette-active #app .v-main .config-page .config-item-wrapper,",
+            "html.astrbot-palette-active #app .v-main .config-panel .config-item-wrapper,",
+            "html.astrbot-palette-active #app .v-main .config-page .config-tabs-window,",
+            "html.astrbot-palette-active #app .v-main .config-panel .config-tabs-window,",
+            "html.astrbot-palette-active #app .v-main .config-panel .v-window,",
+            "html.astrbot-palette-active #app .v-main .config-panel .v-window-item,",
+            "html.astrbot-palette-active #app .v-main .config-panel .v-field {",
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .extension-card .extension-actions,",
@@ -898,7 +1014,6 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "html.astrbot-palette-active #app .v-main .plugin-card,",
             "html.astrbot-palette-active #app .v-main .plugin-card .extension-actions,",
             "html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions,",
-            "html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card,",
             "html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions,",
             "html.astrbot-palette-active #app .v-main .config-page .config-section,",
             "html.astrbot-palette-active #app .v-main .config-panel .config-section,",
@@ -948,39 +1063,35 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "  display: none !important;",
             "}",
             "",
+            # .config-panel 内含有 AstrBot 的 position:fixed 浮动按钮，本体不能带
+            # backdrop-filter/filter/transform 等属性，否则会成为固定定位的包含块；
+            # 玻璃效果由 ::before 伪元素承担，并用负 z-index 垫在内容下方。
             "html.astrbot-palette-active #app .v-main .config-page .config-panel,",
             "html.astrbot-palette-active #app .v-main .mt-4.config-panel,",
             "html.astrbot-palette-active #app .v-main .config-panel {",
-            "  position: relative;",
-            "  isolation: isolate;",
             "  background: transparent !important;",
             "  background-color: transparent !important;",
-            "  border: 0 !important;",
+            f"  border: 1px solid {config_panel_border} !important;",
             "  border-radius: 24px !important;",
-            "  box-shadow: none !important;",
-            "  backdrop-filter: none !important;",
-            "  -webkit-backdrop-filter: none !important;",
-            "  background-clip: padding-box !important;",
+            f"  box-shadow: {config_panel_shadow} !important;",
             "  padding: 18px !important;",
             "  overflow: visible !important;",
+            "  position: relative !important;",
+            "  isolation: isolate !important;",
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .config-page .config-panel::before,",
             "html.astrbot-palette-active #app .v-main .mt-4.config-panel::before,",
             "html.astrbot-palette-active #app .v-main .config-panel::before {",
             "  content: \"\" !important;",
-            "  position: absolute;",
-            "  inset: 0;",
-            "  z-index: -1;",
-            "  pointer-events: none;",
+            "  position: absolute !important;",
+            "  inset: 0 !important;",
+            "  z-index: -1 !important;",
+            "  pointer-events: none !important;",
+            "  border-radius: 24px !important;",
             f"  background: {config_outer_surface} !important;",
             f"  background-color: {config_outer_surface} !important;",
-            "  border: 1px solid rgba(var(--v-theme-on-surface), 0.16) !important;",
-            "  border-radius: inherit;",
-            "  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            "  background-clip: padding-box !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .config-page .config-tabs-window,",
@@ -1002,11 +1113,11 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "html.astrbot-palette-active #app .v-main .config-panel .config-section {",
             f"  background: {config_shell_surface} !important;",
             f"  background-color: {config_shell_surface} !important;",
-            "  border: 1px solid rgba(var(--v-theme-on-surface), 0.16) !important;",
+            f"  border: 1px solid {config_panel_border} !important;",
             "  border-radius: 18px !important;",
-            "  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            f"  box-shadow: {config_shell_shadow} !important;",
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
             "  margin: 18px 0 28px !important;",
             "  padding: 14px 18px !important;",
             "  overflow: visible !important;",
@@ -1016,11 +1127,11 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "html.astrbot-palette-active #app .v-main .config-panel .config-row {",
             f"  background: {config_row_surface} !important;",
             f"  background-color: {config_row_surface} !important;",
-            "  border: 1px solid rgba(var(--v-theme-on-surface), 0.15) !important;",
+            f"  border: 1px solid {config_row_border} !important;",
             "  border-radius: 14px !important;",
-            "  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            f"  box-shadow: {config_row_shadow} !important;",
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
             "  margin: 10px 0 !important;",
             "  overflow: hidden !important;",
             "}",
@@ -1066,7 +1177,7 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "  inset: 0;",
             "  pointer-events: none;",
             "  border-radius: inherit;",
-            "  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 44%);",
+            f"  background: {overview_glint};",
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .stats-page .overview-card > * {",
@@ -1077,19 +1188,14 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "html.astrbot-palette-active #app .v-main .provider-page .provider-source-item:hover,",
             "html.astrbot-palette-active #app .v-main .extension-page .extension-card:hover,",
             "html.astrbot-palette-active #app .v-main .extension-card:hover,",
-            "html.astrbot-palette-active #app .v-main .extension-card .extension-actions:hover,",
-            "html.astrbot-palette-active #app .v-main .extension-card .v-card-actions:hover,",
             "html.astrbot-palette-active #app .v-main .extension-page .plugin-card:hover,",
             "html.astrbot-palette-active #app .v-main .plugin-card:hover,",
-            "html.astrbot-palette-active #app .v-main .plugin-card .extension-actions:hover,",
-            "html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions:hover,",
             "html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card:hover,",
-            "html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions:hover,",
             "html.astrbot-palette-active #app .v-main .config-page .config-row:hover,",
             "html.astrbot-palette-active #app .v-main .config-panel .config-row:hover,",
             "html.astrbot-palette-active #app .v-main .stats-page .stat-card:hover {",
             f"  box-shadow: {hover_shadow} !important;",
-            "  transform: translateY(-1px);",
+            f"  transform: {hover_transform};",
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .platform-page .item-card,",
@@ -1105,7 +1211,6 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "html.astrbot-palette-active #app .v-main .plugin-card,",
             "html.astrbot-palette-active #app .v-main .plugin-card .extension-actions,",
             "html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions,",
-            "html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card,",
             "html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions,",
             "html.astrbot-palette-active #app .v-main .config-page .config-section,",
             "html.astrbot-palette-active #app .v-main .config-panel .config-section,",
@@ -1148,18 +1253,51 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "  html.astrbot-palette-active #app .v-main .provider-page .provider-source-item:hover,",
             "  html.astrbot-palette-active #app .v-main .extension-page .extension-card:hover,",
             "  html.astrbot-palette-active #app .v-main .extension-card:hover,",
-            "  html.astrbot-palette-active #app .v-main .extension-card .extension-actions:hover,",
-            "  html.astrbot-palette-active #app .v-main .extension-card .v-card-actions:hover,",
             "  html.astrbot-palette-active #app .v-main .extension-page .plugin-card:hover,",
             "  html.astrbot-palette-active #app .v-main .plugin-card:hover,",
-            "  html.astrbot-palette-active #app .v-main .plugin-card .extension-actions:hover,",
-            "  html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions:hover,",
             "  html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card:hover,",
-            "  html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions:hover,",
             "  html.astrbot-palette-active #app .v-main .config-page .config-row:hover,",
             "  html.astrbot-palette-active #app .v-main .config-panel .config-row:hover,",
             "  html.astrbot-palette-active #app .v-main .stats-page .stat-card:hover {",
             "    transform: none;",
+            "  }",
+            "}",
+            "",
+            "@media (prefers-reduced-motion: reduce) {",
+            "  html.astrbot-palette-active #app .v-main .platform-page .item-card,",
+            "  html.astrbot-palette-active #app .v-main .platform-page .console-term,",
+            "  html.astrbot-palette-active #app .v-main .provider-page .provider-source-item,",
+            "  html.astrbot-palette-active #app .v-main .provider-page .provider-section,",
+            "  html.astrbot-palette-active #app .v-main .extension-page .extension-card,",
+            "  html.astrbot-palette-active #app .v-main .extension-card,",
+            "  html.astrbot-palette-active #app .v-main .extension-card .extension-actions,",
+            "  html.astrbot-palette-active #app .v-main .extension-card .v-card-actions,",
+            "  html.astrbot-palette-active #app .v-main .extension-page .plugin-card,",
+            "  html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card,",
+            "  html.astrbot-palette-active #app .v-main .plugin-card,",
+            "  html.astrbot-palette-active #app .v-main .plugin-card .extension-actions,",
+            "  html.astrbot-palette-active #app .v-main .plugin-card .v-card-actions,",
+            "  html.astrbot-palette-active #app .v-main .market-plugin-card .v-card-actions,",
+            "  html.astrbot-palette-active #app .v-main .config-page .config-section,",
+            "  html.astrbot-palette-active #app .v-main .config-panel .config-section,",
+            "  html.astrbot-palette-active #app .v-main .config-page .config-row,",
+            "  html.astrbot-palette-active #app .v-main .config-panel .config-row,",
+            "  html.astrbot-palette-active #app .v-main .stats-page .stat-card,",
+            "  html.astrbot-palette-active #app .v-main .stats-page .meta-pill,",
+            "  html.astrbot-palette-active #app .v-main .stats-page .range-switch {",
+            "    transition: none !important;",
+            "  }",
+            "  html.astrbot-palette-active #app .v-main .platform-page .item-card:hover,",
+            "  html.astrbot-palette-active #app .v-main .provider-page .provider-source-item:hover,",
+            "  html.astrbot-palette-active #app .v-main .extension-page .extension-card:hover,",
+            "  html.astrbot-palette-active #app .v-main .extension-card:hover,",
+            "  html.astrbot-palette-active #app .v-main .extension-page .plugin-card:hover,",
+            "  html.astrbot-palette-active #app .v-main .plugin-card:hover,",
+            "  html.astrbot-palette-active #app .v-main .extension-page .market-plugin-card:hover,",
+            "  html.astrbot-palette-active #app .v-main .config-page .config-row:hover,",
+            "  html.astrbot-palette-active #app .v-main .config-panel .config-row:hover,",
+            "  html.astrbot-palette-active #app .v-main .stats-page .stat-card:hover {",
+            "    transform: none !important;",
             "  }",
             "}",
             "",
@@ -1248,8 +1386,7 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "  pointer-events: none !important;",
             f"  background: {surface_strong} !important;",
             f"  background-color: {surface_strong} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .extension-card > *,",
@@ -1326,8 +1463,7 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "  pointer-events: none !important;",
             f"  background: {surface_strong} !important;",
             f"  background-color: {surface_strong} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .console-page #console-wrapper > * {",
@@ -1706,25 +1842,36 @@ def _settings_surface_css() -> str:
 
 def _component_management_surface_css(stats_card_blur: int) -> str:
     blur = max(0, min(40, stats_card_blur))
+    glass_enabled = blur > 0
     surface = (
         "rgba(var(--v-theme-surface), "
         "calc(0.42 + var(--astrbot-palette-surface-opacity, 0) * 0.32))"
+        if glass_enabled
+        else "transparent"
     )
     error_surface = (
         "rgba(var(--v-theme-error), "
         "calc(0.12 + var(--astrbot-palette-surface-opacity, 0) * 0.14))"
+        if glass_enabled
+        else "transparent"
     )
     border = (
         "rgba(var(--v-theme-on-surface), "
         "calc(0.20 + var(--astrbot-palette-surface-opacity, 0) * 0.12))"
+        if glass_enabled
+        else "transparent"
     )
     shadow = (
         "0 16px 36px rgba(0, 0, 0, 0.22), "
         "inset 0 1px 0 rgba(255, 255, 255, 0.10)"
+        if glass_enabled
+        else "none"
     )
     field_shadow = (
         "0 8px 22px rgba(0, 0, 0, 0.14), "
         "inset 0 1px 0 rgba(255, 255, 255, 0.08)"
+        if glass_enabled
+        else "none"
     )
     scopes = [
         (
@@ -1773,8 +1920,7 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
             f"  background-color: {surface} !important;",
             f"  border-color: {border} !important;",
             f"  box-shadow: {shadow} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             ",\n".join(fields) + " {",
@@ -1783,8 +1929,7 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
             f"  border-color: {border} !important;",
             "  border-radius: 14px !important;",
             f"  box-shadow: {field_shadow} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             ",\n".join(field_overlays) + " {",
@@ -1796,8 +1941,7 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
             f"  background: {error_surface} !important;",
             f"  background-color: {error_surface} !important;",
             f"  box-shadow: {shadow} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             ",\n".join(alert_underlays) + " {",
@@ -1824,8 +1968,7 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
             "  border-radius: inherit !important;",
             f"  background: {surface} !important;",
             f"  background-color: {surface} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             ",\n".join(table_roots) + " {",
@@ -2123,22 +2266,37 @@ def _platform_dialog_surface_css() -> str:
 
 def _extension_dialog_surface_css(stats_card_blur: int) -> str:
     blur = max(0, min(40, stats_card_blur))
+    glass_enabled = blur > 0
     surface = "rgba(var(--v-theme-surface), var(--astrbot-palette-surface-opacity, 0))"
     docs_surface = (
         "rgba(var(--v-theme-surface), "
         "calc(0.46 + var(--astrbot-palette-surface-opacity, 0) * 0.30))"
+        if glass_enabled
+        else "transparent"
     )
     docs_surface_soft = (
         "rgba(var(--v-theme-surface), "
         "calc(0.32 + var(--astrbot-palette-surface-opacity, 0) * 0.22))"
+        if glass_enabled
+        else "transparent"
     )
     neutral_soft = (
         "rgba(var(--v-theme-on-surface), "
         "calc(var(--astrbot-palette-surface-opacity, 0) * 0.08))"
+        if glass_enabled
+        else "transparent"
     )
     border = (
         "rgba(var(--v-theme-on-surface), "
         "calc(var(--astrbot-palette-surface-opacity, 0) * 0.18))"
+        if glass_enabled
+        else "transparent"
+    )
+    docs_shadow = (
+        "0 24px 72px rgba(0, 0, 0, 0.36), "
+        "inset 0 1px 0 rgba(255, 255, 255, 0.12)"
+        if glass_enabled
+        else "none"
     )
     return "\n".join(
         [
@@ -2218,9 +2376,8 @@ def _extension_dialog_surface_css(stats_card_blur: int) -> str:
             f"  background: {docs_surface} !important;",
             f"  background-color: {docs_surface} !important;",
             f"  border-color: {border} !important;",
-            "  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            f"  box-shadow: {docs_shadow} !important;",
+            *_backdrop_filter_lines(blur),
             "}",
             "",
             "html.astrbot-palette-active .v-overlay-container .v-dialog .v-card:has(.v-card-title .text-h2.pa-2) > .v-card-title,",
@@ -2235,8 +2392,8 @@ def _extension_dialog_surface_css(stats_card_blur: int) -> str:
             f"  background: {docs_surface_soft} !important;",
             f"  background-color: {docs_surface_soft} !important;",
             "  box-shadow: none !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
             "}",
             "",
             "html.astrbot-palette-active .v-overlay-container .v-dialog .markdown-body,",
@@ -2244,8 +2401,8 @@ def _extension_dialog_surface_css(stats_card_blur: int) -> str:
             f"  background: {docs_surface_soft} !important;",
             f"  background-color: {docs_surface_soft} !important;",
             f"  border-color: {border} !important;",
-            f"  backdrop-filter: blur({blur}px) saturate(1.08) !important;",
-            f"  -webkit-backdrop-filter: blur({blur}px) saturate(1.08) !important;",
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
             "}",
         ]
     )

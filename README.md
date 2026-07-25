@@ -2,11 +2,11 @@
 
 AstrBot调色盘是一个 AstrBot WebUI 美化插件。当前版本聚焦于背景图库、透明界面、Liquid Glass 设置页、文字可读性增强和壁纸主题色联动，让 Dashboard 可以在不修改 AstrBot 源码的前提下换上自定义壁纸。
 
-当前已测试兼容 AstrBot `4.26.6`。
+当前已测试兼容 AstrBot `4.26.7`。
 
-> 当前版本：`0.4.8`
+> 当前版本：`0.4.9`
 >
-> 兼容 AstrBot：`>=4.26.0-beta1`，已测试兼容 `4.26.6`
+> 兼容 AstrBot：`>=4.26.0-beta1`，已测试兼容 `4.26.7`
 
 ## 功能
 
@@ -15,6 +15,7 @@ AstrBot调色盘是一个 AstrBot WebUI 美化插件。当前版本聚焦于背�
 - 支持打开或刷新 WebUI 时从当前方向图库随机切换背景。
 - 调整背景填充方式、位置、遮罩、模糊、灰度、亮度、对比度和饱和度。
 - 将 Dashboard 常驻面板透明化，支持完全透明的悬浮文字效果。
+- 统计、平台、提供商、插件和配置页面的主要信息框支持可配置毛玻璃强度，`0` 表示关闭整套毛玻璃装饰并恢复全透明。
 - 提供文字和图标可读性增强，包括柔和阴影和强力描边。
 - 自动读取当前壁纸主题色，并同步 AstrBot 主色与辅色。
 - 提供 Apple-like Liquid Glass 风格的分标签插件设置页，可在插件详情页中直接配置。
@@ -52,7 +53,7 @@ git clone https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_palette.git
 
 - 插件名：`astrbot_plugin_palette`
 - 展示名：`AstrBot调色盘`
-- 版本：`0.4.8`
+- 版本：`0.4.9`
 
 ## 使用
 
@@ -90,6 +91,7 @@ git clone https://github.com/Sisyphbaous-DT-Project/astrbot_plugin_palette.git
 | `background_blur` | 背景模糊强度，单位 px | `0` |
 | `background_dim` | 全局暗色遮罩强度 | `0.5` |
 | `surface_opacity` | 常驻面板底色强度，`0` 为透明 | `0.0` |
+| `stats_card_blur` | 统计、平台、提供商、插件和配置页面主要信息框的毛玻璃强度，范围 `0`–`40` px，`0` 表示同时关闭模糊、半透明底色、边框和阴影，让信息框恢复全透明 | `14` |
 | `text_enhancement_mode` | 文字增强模式，可选 `off`、`soft_shadow`、`stroke` | `soft_shadow` |
 | `text_enhancement_strength` | 文字增强强度 | `1.0` |
 | `background_grayscale` | 背景灰度 | `0.0` |
@@ -141,7 +143,7 @@ Dashboard 会监听视口方向变化。浏览器从竖屏切到横屏时，会�
 `0.4.0` 将设置页重构为分标签布局：
 
 - `图库`：上传、切换、删除背景，并设置打开或刷新时随机背景。
-- `外观`：调整背景填充、位置、遮罩、模糊、界面底色和基础滤镜。
+- `外观`：调整背景填充、位置、遮罩、模糊、界面底色、信息框模糊和基础滤镜。
 - `可读性`：调整文字增强、灰度、亮度、对比度和饱和度。
 - `主题`：查看壁纸主题色联动状态，并手动重新读取主题色。
 - `高级`：追加自定义 CSS。
@@ -238,6 +240,7 @@ PYTHONPATH=/path/to/AstrBot python -m py_compile main.py palette/*.py
 node --check pages/settings/app.js
 node --check pages/settings/liquid-glass.js
 python -m json.tool _conf_schema.json
+python -m unittest discover -s tests -p "test_*.py"
 git diff --check
 ```
 
@@ -272,6 +275,8 @@ git diff --check
 `0.4.7` 确认兼容 AstrBot `4.26.5`，核心插件 API、设置页桥接、WebUI 注入路径和系统统计增强均保持可用。
 
 `0.4.8` 已测试兼容 AstrBot `4.26.6`，核心插件 API、设置页桥接、WebUI 注入路径和系统统计增强均保持可用。
+
+`0.4.9` 为主要信息框增加可配置毛玻璃效果，支持用 `stats_card_blur=0` 恢复全透明，并已测试兼容 AstrBot `4.26.7`。
 
 后续版本会继续补齐更多页面的透明化细节，并探索更完整的主题色板推导。
 
