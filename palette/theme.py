@@ -68,7 +68,7 @@ def build_theme_css(config: dict[str, Any]) -> str:
 
     return "\n".join(
         [
-            "/* AstrBot调色盘 0.4.8 运行时主题 CSS */",
+            "/* AstrBot调色盘 0.4.10 运行时主题 CSS */",
             ":root {",
             f"  --astrbot-palette-enabled: {enabled};",
             "  --astrbot-palette-background-image: none;",
@@ -1106,7 +1106,12 @@ def _stats_highlight_css(stats_card_blur: int) -> str:
             "  box-shadow: none !important;",
             "  backdrop-filter: none !important;",
             "  -webkit-backdrop-filter: none !important;",
-            "  overflow: visible !important;",
+            "}",
+            "",
+            # Vuetify 切换标签时会同时渲染进场和离场页面，
+            # 窗口必须裁剪位移到框外的内容，否则两页会在动画期间同时可见。
+            "html.astrbot-palette-active #app .v-main .config-panel .config-tabs-window.v-window {",
+            "  overflow: hidden !important;",
             "}",
             "",
             "html.astrbot-palette-active #app .v-main .config-page .config-section,",
@@ -1901,6 +1906,10 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
     table_layers = [f"{table_shell}::before" for table_shell in table_shells]
     table_roots = [f"{table_shell} > .v-data-table" for table_shell in table_shells]
     table_overlays = [f"{table_shell} > .v-card__overlay" for table_shell in table_shells]
+    table_footer_fields = [
+        f"{table_shell} .v-data-table-footer .v-field"
+        for table_shell in table_shells
+    ]
     table_internals = []
     for table_shell in table_shells:
         table_internals.extend(
@@ -1911,6 +1920,7 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
                 f"{table_shell} tbody",
                 f"{table_shell} th",
                 f"{table_shell} td",
+                f"{table_shell} .v-data-table-footer",
             ]
         )
     return "\n".join(
@@ -1988,6 +1998,13 @@ def _component_management_surface_css(stats_card_blur: int) -> str:
             ",\n".join(table_internals) + " {",
             "  background: transparent !important;",
             "  background-color: transparent !important;",
+            "  box-shadow: none !important;",
+            "  backdrop-filter: none !important;",
+            "  -webkit-backdrop-filter: none !important;",
+            "}",
+            "",
+            # 分页选择器位于表格玻璃内，不再叠加第二层滤镜和阴影。
+            ",\n".join(table_footer_fields) + " {",
             "  box-shadow: none !important;",
             "  backdrop-filter: none !important;",
             "  -webkit-backdrop-filter: none !important;",
